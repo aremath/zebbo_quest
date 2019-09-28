@@ -1,0 +1,149 @@
+What are the samus routines responsible for?
+- Choose which sprite to show for samus
+- Choose which palette to use for the sprite?
+- Loading samus data into VRAM on load game?
+- Collision detection (walls and enemies)
+- Moving samus + updating samus' speed and physics
+- Translating button presses into samus reactions
+	- Implementing items like speed booster, grapple, morph, springball, etc.
+- Water Physics
+- Lava Damage
+- Enemy damage? / Environmental Damage / Damage boosting
+- Handle Keybindings
+- Write important RAM values about samus
+- Draw samus + echoes + environmental effects from samus
+- Handle screen scrolling
+- Update Minimap
+- Handle Samus projectiles
+	- SBAs and CF
+- HUD selection
+- Pausing
+- Low HP alarm
+- Suit Cutscenes
+
+What do I want/need to implement myself:
+- Choosing which sprite to show for samus		x~
+- Choosing which palette to use					x~
+- Loading samus data into VRAM					x~
+- Moving samus + samus physics
+- Translating button presses into samus reactions
+	- Implementing items like speed booster, grapple, morph, springball, etc.
+- Pause menu
+	- Edits, not re-implementation, I hope
+- Remove Low HP alarm
+- Disable suit cutscenes
+- Changing item graphics...
+- Create the egg item + eggs counter
+- Change heat to do something different! (don't damage for a certain amount of time, but still play the noise)
+
+Keep:
+- Collision Detection (mostly)
+	- Need to alter landing on the ground so that the ground isn't treated differently from ex. a ceiling
+- Water Physics
+- Lava Damage!
+- Enemy damage? / Environmental Damage / Damage boosting
+- Handle Keybindings
+- Write important RAM values about samus
+- Draw samus + echoes + FX
+- Handle screen scrolling
+- Update Minimap
+- HUD selection??
+	- Nothing visible on the HUD except the number of rescued larvae... (plus, don't select it!)
+- Pausing
+
+Headers are in bank $A0 (Enemy ID is a pointer into $A0 corresponding to the enemy header)
+Enemies for use:
+Name		ID		Tile Location		Code Location
+Zebbo:		F1D3	$AE:E520 (2x2)		
+Zeb: 		F193	$AE:C120 (2x2)
+Gamet:		F213	$AE:E920 (2x2?)
+Geega:		F253	$AE:E120 (2x2)
+Fireflea:	D6BF	$AF:D6BF (2x3)
+Zoa:		DA7F	$AF:E800 (2x2)		$A3
+
+movement:
+D-pad for normal movement
+hold or press Run for something else -- depends on creature
+
+Uses RAM:
+#MODE		0 = normal, 1 = boosting, 2 = cooldown
+#TIME		number of frames left in the action
+
+Uses MEM:
+$BOOST_TIME_t	How long to boost for
+$COOL_TIME_t	How long to cool for
+
+For air, water, (lava)
+$BOOST_Y_SPEED_t	what value to set the speed to on the first frame of boost
+$BOOST_X_SPEED_t #FFFF -> don't change it? or just another flag
+$BOOST_Y_ACCEL_t	how much to accelerate when pressing buttons during the boost
+$BOOST_X_ACCEL_t
+$BOOST_Y_MAX_t		max speed during the boost
+$BOOST_X_MAX_t
+$BOOST_FRICTION_t	per-frame deceleration during the boost
+
+""
+COOLDOWN
+
+Zebbo:		Hold down to increase acceleration + max speed...
+Zeb: 		Press to charge forward. Increased max speed and sets x speed to max speed, sets y speed to zero.
+			While charging, y accel is zero, x deccel is zero. Then "cools down" with low max speed period.
+Gamet:		Backdash??
+Geega:		Hold down to increase max speed and at high speeds trigger blue suit / speed booster. Increased accel?
+Fireflea:	Press to dip down sharply. Cools down with a zero speed period?
+Zoa:		Press to enter low-friction swim. (only in water) add high speed in the directions pressed, and decrease friction
+			for the cooldown period.
+			
+Computing Samus' speed before collision detection:
+
+Consider:
+RAM:
+#X_ACCEL
+#Y_ACCEL
+-- preload the values??
+
+// Handle #MODE
+// Enter Boost
+if (if #MODE == 0 and #PRESSING_B):
+	run boost_code_t
+		- Sets #TIME
+		- Sets #MODE = 1
+		- Sets speed based on directions pressed
+// Exit Boost
+if (#MODE == 1 and #TIME == 0):
+	run cool_code_t
+		- Sets #TIME
+		- Sets #MODE = 2
+		- Sets speed based on directions pressed
+// Exit "continuous boost" for types that use continuous boost
+elif (#TYPE == ...)
+	run cool_code_t
+// Exit Cooldown
+if (#MODE == 2 and #TIME == 0):
+	Set #MODE = 0
+
+// Calculate acceleration + speed
+if (#PRESSING_UP):
+	#Y_SPEED -= speed_table[#TYPE][#LIQUID][#MODE]
+	max = -max_speed_table[#TYPE][#LIQUID][#MODE]
+	if (#Y_SPEED < max or underflow):
+		#Y_SPEED = -max
+if (#PRESSING LEFT):
+	#X_SPEED -= speed_table[#TYPE][#LIQUID][#MODE]
+	...
+...
+// Set Samus pose
+// The idea here is we'll create 4 poses per type -- the cartesian product of {boosting, not_boosting}, {facing_left, facing_right}
+// Then use AND to determine the actual pose number.
+if (#X_SPEED > 0):
+	#POSE = #TYPE & pos_mask & boost_mask
+else:
+	#POSE = #TYPE & neg_mask & boost_mask
+	
+Creature	Item
+Zebbo		None
+Zeb			Morph Ball
+Gamet		Varia
+Geega		Speed Booster
+Fireflea	Space Jump
+Zoa			Gravity

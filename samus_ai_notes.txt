@@ -1,0 +1,99 @@
+For each form, there will be a table of animations (common to each form) as with samus
+	-> can use samus' speed to alter the speed of the animation, as the base game does with samus running.
+
+NOTE: 90:ECD5 -> routine that changes samus' position (not speed though...)
+	-> Debug mode for reference only!
+
+
+[11:24 AM] P.JBoy: main gameplay routine ($82:8B44) calls $90:E692 and $90:E722, which execute [$0A42] and [$0A44] respectively
+[11:26 AM] P.JBoy: it also calls $A0:884D which calls $90:EB35, which draws Samus and projectiles
+[11:27 AM] P.JBoy: Samus is initialised with $91:E00D, which sets $0A42 = $E8CD and $0A44 = $E8DC in Zebes or $0A44 = $E86A in Ceres
+
+90:E695
+90:E725
+
+[11:32 AM] P.JBoy: yeah it's set to $E695 when you get control of Samus
+[11:33 AM] P.JBoy: there's a routine $90:F084 that seems to control these configurations
+[11:33 AM] P.JBoy: calling it with A = 1 enables Samus for the most part, I think
+
+
+
+
+When Samus is initialized:
+$90:E692 -> $90:E8CD
+
+$90:E722 -> $90:E8DC
+	-> $90:A91B	(Draw minimap?)
+	-> $90:8000	(Animate Samus)
+	
+Running normally:
+$90:E695
+	-> $EC22			(Set Samus' radius)
+	-> $E90F			(Get controller input depending on $0A60)
+		[$0A60] - $E913 during normal gameplay
+			-> $91:8000	(Look up movement type, do stuff, then check transition table for the next pose)
+	-> $ECB6			(Determines Samus' palette index from suits)
+	-> $9C5B			(Handles gravity)
+		-> $90:EC3E		(Computes Samus' bottom boundary -- to determine if samus is in the liquid)
+	-> $94:9B60			(Block inside reaction jump table -- jumps to reactions based on what blocks samus is inside (ex. handles spikes))
+	-> $DCDD			(Handle HUD behavior and projectiles)
+		-> $AECE		(Handle current projectiles / bombs)
+	-> $EB02			(???)
+
+$90:E725
+	-> $F52F	(RTS)
+	-> $E94B	(Handles Samus' Movement)
+		-> [$0A58] - $A337 during normal movement
+			-> Jump based on the $A34B movement table
+			; and goes to 90:9348, 90:923F, and 91:DE53 (movement and collision detection)
+				-> $90:9348
+					-> $8EA9 (Check samus' direction, then jump based on net movement)
+						-> $E4AD		(Add Samus' horizontal speed to $12.$14)
+							-> $E4E6	(Friction?)
+						-> $E464		(Subtract Samus' horizontal speed from $12.$14)
+						-> $9350		(Move Samus Left)
+						-> $93B1		(Move Samus right)
+				-> $90:923F			(Samus Y motion) -- good reference
+					-> $93EC		(Move Samus up)
+					-> $9440		(Move Samus down)
+				-> $90:8E64			(Samus X motion)
+					-> $973E		(Check if samus is underwater, cap her speed / apply underwater physics) -- read
+					-> $9BD1		(Momentum stuff)
+					-> $9A7E		(More momentum stuff)
+					-> $8EA9
+						-> $E4AD
+						-> $E464
+						-> $9350	(Move Samus left)
+						-> $93B1	(Move Samus right)
+				-> $91:DE53 // Queue damage sound?
+				
+	-> $90:A91B	(Draw Minimap?)
+	-> $E097	(Used for timer $E0E6. No other known uses)
+	-> $8000	(Animate Samus)
+	-> $DDE9	(Samus is hit interruption)
+	-> $91:E8B6	(Handles Automatic transitions from block collisions)
+	-> $91:EB88 (Handles all transitions (not space jumping))
+	-> $91:D6F7 (Special Sound / Palettes for Samus. Also handles space jump timer)
+	-> $E9CE	(Handle periodic damage to samus (Lava, Acid, Heat))
+	-> $EA45	(Pause the game when you press start)
+	-> $EA7F	(Low HP check -- queue monkaS sounds)
+
+
+TODO list (ordered by order of events in ^)
+- $91:8000	- Edit the transition table
+- $ECB6		- Edit / remove -- I will be loading the palette dynamically since there are at least six palettes that will be used.
+	-> Refer here to know where to load the palette to?
+- $9C5B		- Remove gravity by setting $90:9EA1..9EAB to 0000
+
+- $E94B		- Needs to look VERY different!
+	-> Look at and edit subsidiaries.
+- $8000		- Change animation delay based on speed...?
+- $94:9B60	- POSSIBLY: does being inside a solid block have a reaction? Probably does not need to change.
+- $91:E8B6	- Change landing on the ground.
+- $91:EB88	- ^^ + edit transition tables
+- $E9CE		- Change to allow samus to survive the first few seconds
+- $EA7F		- Remove
+
+TODO list not covered by ^:
+- Spawn Samus in in the Zebbo pose... (edit initialization AI at $91:E00D?)
+- Edit pause menu + change item equipping to dynamically load palettes + change pose automatically.

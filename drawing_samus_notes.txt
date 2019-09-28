@@ -1,0 +1,198 @@
+[11:59 AM] Aremath: I'm talking about $92:9657
+[11:59 AM] P.JBoy: the spritemap table and the tiles table
+[11:59 AM] P.JBoy: the spritemap format is a standard thing in SM
+[11:59 AM] Aremath: I'm talking about $92:9657
+[11:59 AM] P.JBoy: see the comments in bank $81
+[11:59 AM] Aremath: okay
+12:00 PM] P.JBoy: it's roughly: <number of sprites>, <X offset>,<Y offset>,<tile number>, ...
+
+12:07 PM] Aremath: and are the spritemap table indices at $92:9263 indexed by pose as well or something else?
+[12:07 PM] P.JBoy: yeah
+
+[12:07 PM] P.JBoy: yeah
+[12:07 PM] P.JBoy: so $DB48 is fun
+[12:08 PM] P.JBoy: the first byte indexes $D91E which gives a pointer to one of the sets in $CBEE..D7D2
+[12:09 PM] P.JBoy: and the second byte indexes that set to get the tiles definition entry
+[12:09 PM] P.JBoy: the third and fourth bytes do the same, but for the optional 'bottom' half
+[12:09 PM] Aremath: okay
+[12:10 PM] P.JBoy: third byte = FFh => no bottom definition
+
+[12:12 PM] Aremath: and what are the tiles definition entries?
+[12:15 PM] P.JBoy: Pointer to DMA data (bank 92) for Samus' top sprites (3 byte address, 2 byte part 1 size, 2 byte part 2 size)
+[12:15 PM] P.JBoy: so long address of tile data and two size pointers
+[12:15 PM] Aremath: why two size pointers?
+[12:16 PM] P.JBoy: first part goes to VRAM $6000, second part goes to VRAM $6100
+[12:17 PM] P.JBoy: that's handled during NMI by $80:9376
+
+12:23 PM] Aremath: so let me see if I have this straight: When samus is going to be drawn, they first use the pose to index the tiles animation table
+[12:23 PM] P.JBoy: I have no idea what the sets are
+[12:23 PM] P.JBoy: Like why they're grouped together like that
+[12:23 PM] Aremath: then use the tiles animation table to index the tile definition entry
+[12:24 PM] Aremath: then use the tile definition entry to load the right tiles into VRAM
+[12:24 PM] Aremath: then we use the pose again to index the spritemap table
+[12:24 PM] P.JBoy: Pose + animation frame
+[12:24 PM] Aremath: which (?) creates a sprite from the tiles somehow?
+[12:24 PM] Aremath: ah yes
+[12:25 PM] P.JBoy: The spritemap is a list of sprites, yeah
+[12:25 PM] P.JBoy: The sprites draw from the tiles
+[12:25 PM] Aremath: what do you mean by "draw from"?
+[12:26 PM] P.JBoy: Each sprite draws a tile to a given position
+[12:26 PM] Aremath: oh
+[12:26 PM] Aremath: and handles flips and stuff
+[12:26 PM] P.JBoy: The tile specified by the sprite is fixed
+[12:26 PM] P.JBoy: Yeah
+[12:26 PM] Aremath: ok
+[12:27 PM] Aremath: so there is actually one entry in the spritemap per tile that will be drawn
+[12:27 PM] P.JBoy: Yeah
+[12:27 PM] P.JBoy: Unless the sprite's size bit is set
+[12:27 PM] Aremath: and presumably the offsets are relative to something (in this case samus' psoition)
+[12:27 PM] P.JBoy: Then it draws 2x2 tiles
+[12:27 PM] P.JBoy: Yeah
+[12:27 PM] Aremath: okay
+
+[3:52 PM] P.JBoy: Enemies graphics are loaded, and the enemy is given the base address in VRAM for its tiles
+[3:53 PM] P.JBoy: Then the spritemap unpacker for enemies adjusts the tile id by this base address
+[3:53 PM] Aremath: okay
+
+[3:53 PM] Aremath: so it's only samus that plays the whole rigamarole with dynamically loading tiles using the animation table
+[3:53 PM] Aremath: because there's not enough room to store all of her animations?
+[3:54 PM] P.JBoy: Indeed
+
+[3:54 PM] Aremath: where does the enemy store its VRAM address?
+[3:55 PM] Smiley: /smram 0f98
+
+[3:56 PM] Aremath: and that gets set when the room is loading based on the enemy population for the room I guess?
+[3:58 PM] P.JBoy: Enemy set, yeah
+
+; More specifically, a spritemap entry is:
+;     s000000xxxxxxxxx yyyyyyyy YXpp000ttttttttt
+; Where:
+;     s = size bit
+;     x = X offset of sprite from centre
+;     y = Y offset of sprite from centre
+;     Y = Y flip
+;     X = X flip
+;     p = priority (relative to background)
+;     t = tile number
+
+20h tiles in 400h bytes -> 20h bytes per tile
+
+Create new poses for samus!
+
+
+[10:13 PM] Aremath: okay, a few more questions about animating samus :P
+[10:13 PM] Aremath: what determines the index into the samus spritemap table that is used?
+[10:13 PM] Aremath: some combination of the animation frame and the pose
+[10:13 PM] Aremath: (right?) but what combination?
+[10:17 PM] Aremath: so the pose and the animation frame index the animation delay table to determine when to increment (or reset) the animation frame
+[10:18 PM] Aremath: and the order of the spritemap pointers in the spritemap table ($92:808D) determines what the actual series of sprites that is used in the animation is?
+
+Animation definitions (these are the same...)
+; 1D: Facing right - morph ball - no springball - on ground
+; 31: Facing right - morph ball - no springball - in air
+; 32: Facing left  - morph ball - no springball - in air
+; 3F: Unused
+; 40: Unused
+$92:E508             db 0A,00,00,00, 0A,04,00,00, 0A,01,00,00, 0A,05,00,00, 0A,02,00,00, 0A,06,00,00, 0A,03,00,00, 0A,07,00,00, 00,00,00,00, 0B,01,00,00
+; 79: Facing right - morph ball - spring ball - on ground
+; 7B: Moving right - morph ball - spring ball - on ground
+; 7D: Facing right - morph ball - spring ball - falling
+; 7F: Facing right - morph ball - spring ball - in air
+$92:E5A8             db 0A,00,00,00, 0A,04,00,00, 0A,01,00,00, 0A,05,00,00, 0A,02,00,00, 0A,06,00,00, 0A,03,00,00, 0A,07,00,00, 00,00,00,00, 0B,01,00,00
+
+; 1E: Moving right - morph ball - no springball - on ground
+$92:E558             db 0A,00,00,00, 0A,04,00,00, 0A,01,00,00, 0A,05,00,00, 0A,02,00,00, 0A,06,00,00, 0A,03,00,00, 0A,07,00,00, 00,00,00,00, 0B,01,00,00
+
+; 1F: Moving left  - morph ball - no springball - on ground
+$92:E580             db 0A,07,00,00, 0A,03,00,00, 0A,06,00,00, 0A,02,00,00, 0A,05,00,00, 0A,01,00,00, 0A,04,00,00, 0A,00,00,00, 00,00,00,00, 0B,01,00,00
+
+
+Reference tile definitions in D613
+
+00
+04
+01
+05
+02
+06
+03
+07
+00:00
+0B:01
+
+[9:09 PM] Smiley: It's simply because the Zoa is drawn with 2x2 sprites
+[9:09 PM] Aremath: the first bit of the spritemap, right?
+[9:09 PM] Smiley: And when you draw a large sprite like that, using n as the index
+[9:09 PM] Smiley: It draws tiles n, n+1, n+10 and n+11
+
+; Bottom half - 79: Facing right - morph ball - spring ball - on ground
+; Bottom half - 7B: Moving right - morph ball - spring ball - on ground
+; Bottom half - 7D: Facing right - morph ball - spring ball - falling
+; Bottom half - 7F: Facing right - morph ball - spring ball - in air
+; Top half - 79: Facing right - morph ball - spring ball - on ground
+; Top half - 7B: Moving right - morph ball - spring ball - on ground
+; Top half - 7D: Facing right - morph ball - spring ball - falling
+; Top half - 7F: Facing right - morph ball - spring ball - in air
+                        BAB3 ; 0738
+                        BAE3 ; 0739
+                        BABF ; 073A
+                        BAFE ; 073B
+                        BACB ; 073C
+                        BB0A ; 073D
+                        BAD7 ; 073E
+                        BB16 ; 073F
+                        0000 ; 0740
+                        BC88 ; 0741
+			
+Original Zoa Spritemap:
+$A3:B55F
+0001, 81F8,F8,2100,
+0001, 81F8,F8,2102,
+0001, 81F8,F8,2104,
+0001, 81F8,F8,2106,
+0001, 81F8,F8,2108,
+0001, 81F8,F8,210A,
+
+Flipped horizontally:
+0001, 81F8,F8,6100,
+...
+0001, 81F8,F8,610A,
+
+[9:50 AM] P.JBoy: yeah VRAM bytes are 16 bits
+[9:50 AM] P.JBoy: it's kinda annoying
+
+ANIMATION DELAYS:
+
+[11:37 AM] Aremath: but how does the pose determine what sprite to show?
+[11:38 AM] P.JBoy: the animation delay table specifies how long each frame of the animation of Samus' poses are
+[11:38 AM] Aremath: .... so how many frames to show each sprite for?
+[11:39 AM] P.JBoy: it's presumably adjusted by liquids etc.
+[11:39 AM] P.JBoy: the pose is selected by a pretty complicated process
+
+[11:40 AM] P.JBoy: the table of pointers is indexed by Samus' pose
+[11:40 AM] P.JBoy: then that table entry is indexed by $0A96: Samus animation frame
+[11:41 AM] P.JBoy: and that byte is the number of frames to wait until progressing the animation
+
+
+[11:41 AM] Aremath: and it's like cyclically indexed by the animation frame?
+[11:41 AM] Aremath: or if the animation frame goes past the end of the entry it is reset?
+[11:42 AM] Aremath: how does it know where one entry ends and another begins?
+[11:42 AM] Aremath: (since they're different lengths)
+[11:45 AM] P.JBoy: alright there Fx bytes are commands as it turns out
+[11:46 AM] P.JBoy: FFh means loop back to the start
+[11:46 AM] Aremath: what happens for the ones that don't loop back?
+[11:47 AM] P.JBoy: they all do
+[11:47 AM] P.JBoy: in some way
+[11:47 AM] P.JBoy: FEh is a backwards branch
+[11:47 AM] Aremath: okay
+[11:48 AM] Aremath: oh all the Fxs do something that isn't count a number of frames
+[11:48 AM] Aremath: makes sense
+[11:49 AM] P.JBoy: this is handled by $90:82DC
+
+[11:50 AM] Aremath: what do they point to?
+[11:51 AM] Aremath: and presumably some are used for the top and some are used for the bottom...
+[11:51 AM] Aremath: in morph, is it top or bottom that is used?
+[11:52 AM] Aremath: (I have an endless number of questions, so tell me off when you have things to do :P )
+[11:53 AM] P.JBoy: that stuff is dealt with by $92:8000
+
+Palettes are in bank $9B

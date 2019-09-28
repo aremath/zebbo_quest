@@ -1,0 +1,55 @@
+SM hack where you play as a Zeb
+
+ASM work to do:
+ - replace samus morph sprites with zeb
+ - zero-gravity
+ - lock samus in morph ball
+ - Turn off morph things like bouncing?
+	- or somehow don't use morph entirely...
+ - edit in-game controls to change position instantly
+	-> or update momentum to allow the rest of the game's physics engine / collision detection to work normally
+		+ change "friction"
+ - look at speed-booster code -> Implement speed booster with new movement controls!
+ - figure out how to use multiple sprites for samus
+ - Dying resets the room
+	-> auto-saving?
+ - How to spawn samus in the right state (use a door transition?)
+ - Disable "landing" -> samus should always be interpreted to be in the air, even while hugging the ground
+	-> or possibly just a new state for samus that doesn't do ground stuff...
+ 
+ 90#fECD5 - moving samus directly with the control pad....
+ 
+Core mechanics:
+ - flying around as a zeb
+ - 1 energy -> OHKO mode
+ - However, dying just resets the room (putting you in from the door you came in from)
+ - No beam attack - no attack of any kind until you get speed
+ - Item pickup order probably starts with speed booster, unless there are other ways to break blocks
+	-> then varia, then gravity
+ - Some way to make speed booster affect upwards motion too?
+ - Escape sequence with rising acid
+ - You're rescuing your children: you need to rescue a certain number of them to win
+ 
+Ideas:
+ - Varia / Gravity suit change your sprite futher --- (Zoa, Bull, Zeb, Zebbo, Gamet, Geega)
+	- Gamet: Survive Heat
+	- Zoa: Survive Water
+	- Ripper: speed booster! (or Geega)
+	- Bull: Shielded form??
+	- Survive Lava?
+	- Fireflea: Light the room!!!
+	- Metaree: Drill through the floor!?
+	
+	- Your form determines what you get damaged by??
+	
+	- Ambitious: different forms that you switch between! (using select!?)
+	- Super Ambitious!: start out as a geemer, gain other possible forms that move as they do in-game + have in-game invulnerabilities
+		-> you are an X-parasite initially (puyo form)
+		-> probably too much for an initial idea
+		-> Kirby-style copy enemy form?
+	- Ambitious: Your children follow you around, and you can't have more than X of them follow you at a time...
+ - Ripper Quest?
+ - Geemer Quest??
+ - Snail Quest?
+ - Beetom Quest??
+ - Botwoon Quest!
