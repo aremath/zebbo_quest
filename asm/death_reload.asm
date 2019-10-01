@@ -22,10 +22,10 @@ org $82DBAC
 LDA #$0009  ; Set game state to 0x9 instead of 0x13
 
 ; Hijack the place samus routine $82:E3C0
-;org $82E3C5
-;JSR LOADPOS
-;org $82E3E5
-;JSR SAVEPOS
+org $82E3C5
+JSR LOADPOS
+org $82E3E5
+JSR SAVEPOS
 
 org $82F800
 WHENDIE:
@@ -37,6 +37,8 @@ WHENDIE:
     ;STA $0998
     ; Then, set the flag that samus died:
     ; the door transition code will load her position instead of using the door.
+    LDA #$0001
+    STA !samusdied
     RTS
 
 ; If samus died, load her position from memory and unset died
@@ -48,6 +50,9 @@ LOADPOS:
     STA !samusx
     LDA !samussavey
     STA !samusy
+    ; Unset died
+    LDA #$0000
+    STA !samusdied
     ; If this is a regular door transition, don't do anything
     .nodie:
     LDA $0AF6 ; Reload samus X (hijack fixup)
@@ -60,4 +65,5 @@ SAVEPOS:
     LDA !samusy
     STA !samussavey
     STZ $0931   ; Door transition finished scrolling (hijack fixup)
+    RTS
     
