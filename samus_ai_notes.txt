@@ -72,8 +72,8 @@ $90:E725
 	-> $8000	(Animate Samus)
 	-> $DDE9	(Samus is hit interruption)
 	-> $91:E8B6	(Handles Automatic transitions from block collisions)
-	-> $91:EB88 (Handles all transitions (not space jumping))
-	-> $91:D6F7 (Special Sound / Palettes for Samus. Also handles space jump timer)
+	-> $91:EB88 (Handles all transitions (not space jumping (shine sparking?)))
+	-> $91:D6F7 (Special Sound / Palettes for Samus. Also handles space jump / (shine spark?) timer)
 	-> $E9CE	(Handle periodic damage to samus (Lava, Acid, Heat))
 	-> $EA45	(Pause the game when you press start)
 	-> $EA7F	(Low HP check -- queue monkaS sounds)
@@ -97,3 +97,57 @@ TODO list (ordered by order of events in ^)
 TODO list not covered by ^:
 - Spawn Samus in in the Zebbo pose... (edit initialization AI at $91:E00D?)
 - Edit pause menu + change item equipping to dynamically load palettes + change pose automatically.
+- Edit item messages / art
+- Edit HUD display
+- Reload on death
+
+$91:DF12 as a reference as well
+
+$82:8F70 -- disable
+$82:A12B -- check
+	-> how does selecting plasma beam on the pause menu work?
+	$82:B068
+	$82BE2F -> Queue samus sounds -> low HP sound.
+	
+Game state 0x13 // $82:DB69
+
+
+0x078D 2e 89		DDB pointer for current room transition
+	-> Door Pointer
+0x07B5 f9 92		Room's Door out Pointer
+	-> Door List Pointer
+
+0x0927 and 0x0929 don't update properly? (seems fine?)
+
+Pay attention to 0x099C
+
+After bad transition:
+X = 0528.0000
+Y = 00B6.23FF
+
+After good transition:
+X = 04C8.0000
+Y = 008B.FFFF
+
+
+$82:AE7E
+$80:AD30 sets the camera position in the new room
+
+[9:45 PM] Aremath: you're saying that after you trigger the door transition you save samus' position
+[9:45 PM] Aremath: and then if it's saved you can just set it to that when the room gets loaded again
+$82:E3C0 places samus in the new room
+
+[9:46 PM] moehr: do you need all doors to do this or just some? Cause you could probably use that unused BTS vanilla slot to make your alternative door BTS
+[9:47 PM] moehr: and have that log the proper position
+[9:47 PM] moehr: then just place whichever tile type is sensible
+[9:49 PM] Aremath: oh my plan was not to make the tile log anything
+[9:50 PM] Aremath: instead I would make it so that the "place samus" routine checks a death flag
+[9:50 PM] Aremath: if the flag is false, it loads normally, but saves samus' position in the room to RAM
+[9:51 PM] Aremath: if the flag is true, it loads samus' position from RAM instead of placing her normally
+[9:51 PM] Aremath: idk if that sounds sensible
+[9:52 PM] Aremath: It seems simple, but the disadvantage is that there's no way to turn it off
+[9:52 PM] Aremath: for me, that's not a problem, but other people might want something different
+[9:53 PM] Aremath: on the other hand, I don't really know how to edit tiles' reactions
+10:00 PM] crashed: it's all just a series of tables with pointers to code in $93.  shot, touch, inside reactions
+
+$7F:FA02-$7F:FFFF

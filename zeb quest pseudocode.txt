@@ -132,13 +132,16 @@ if (#PRESSING LEFT):
 	#X_SPEED -= speed_table[#TYPE][#LIQUID][#MODE]
 	...
 ...
+if (not pressing a direction):
+	// Handle samus friction
 // Set Samus pose
 // The idea here is we'll create 4 poses per type -- the cartesian product of {boosting, not_boosting}, {facing_left, facing_right}
 // Then use AND to determine the actual pose number.
 if (#X_SPEED > 0):
 	#POSE = #TYPE & pos_mask & boost_mask
-else:
+if (#X_SPEED < 0):
 	#POSE = #TYPE & neg_mask & boost_mask
+-- don't change pose if speed == 0
 	
 Creature	Item
 Zebbo		None
@@ -147,3 +150,7 @@ Gamet		Varia
 Geega		Speed Booster
 Fireflea	Space Jump
 Zoa			Gravity
+
+
+Friction
+Multiple files

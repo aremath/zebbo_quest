@@ -1,0 +1,20 @@
+LoROM
+
+;//[quick fix for broken saves/save states]
+;=========================================================================;
+
+;//[gamestate 1Ah gameover screen pointer]
+org $8289B5
+	dw AUTOSAVE
+
+;//[free space]==($18 bytes)
+org $82F70F
+AUTOSAVE:
+	LDA $09C4		;//samus max health
+	STA $09C2		;//samus health
+	STZ $079F		;//region number
+	STZ $078B		;//save in area
+	LDA $0952		;//save slot selected
+	JSL $818000		;//save to sram
+	JSL $8190AE		;//gamestate 1Ah
+	RTS			;//return

@@ -53,3 +53,7 @@ Ideas:
  - Snail Quest?
  - Beetom Quest??
  - Botwoon Quest!
+ 
+Messages like "A new friend joins the team!" when you pick up the items that allow you to transform.
+(Auto-equip the new friend as well)
+- Don't display energy at all!
