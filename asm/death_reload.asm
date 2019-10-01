@@ -1,5 +1,11 @@
+; Death Reload ASM
+; Aremath
 ; Instead of dying, on reaching 0 energy you're set back to full energy and reload from where you entered the room.
-; Credit to Black_Falcon for the Door Glitch fix that allows the scrolls to work properly
+; Should be applied alongside Black_Falcon's Door Glitch Fix (v1.2) that fixes how scrolling works for misaligned doors
+; Uses free space in bank $82
+
+; TODO: save and reset samus' pose, speed, etc.
+
 lorom
 
 ; Macros
@@ -65,5 +71,8 @@ SAVEPOS:
     LDA !samusy
     STA !samussavey
     STZ $0931   ; Door transition finished scrolling (hijack fixup)
+    ; Give samus control back
+    LDA #$0001
+    JSL $90F084
     RTS
-    
+
