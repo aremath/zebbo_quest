@@ -57,3 +57,38 @@ Ideas:
 Messages like "A new friend joins the team!" when you pick up the items that allow you to transform.
 (Auto-equip the new friend as well)
 - Don't display energy at all!
+
+-Gamet is immune to heat, but can only survive a few seconds of lava
+- What do zebbo / Zeb do?
+	- Immune to "thorns"?
+	- Gain a shield from spores?
+	- ???
+- Friend immunity -- zebs deal no damage to zeb form etc?
+
+- Fireflea uses x-ray mode??
+	X-ray direction set to samus velocity
+	(calculate tan^-1 by using Taylor approx. or use a table like $89:AD5f)
+
+[3:44 PM] moehr: There's a check that can be disabled. Had to do it for an item I replaced x-ray. I can't remember the reason but I wanted the item to work while running
+[3:44 PM] moehr: It's in bank $92 or (93 maybe)
+
+[3:56 PM] amoeba: Xray works by taking over layer 2, putting the scanned version of layet 1 there and then using windowing and hdma to create the eye cone
+[3:57 PM] amoeba: You can't move so the code doesn't have to figure out how to update the scanned version
+[3:58 PM] amoeba: You'd need to rewrite part of the movement routines to build and transfer the tilemap for the scanned tiles
+
+[4:01 PM] Aremath: also wondering if there's a way to get the darkening effect of ex. fireflea rooms or XRAY to apply to enemy sprites
+[4:01 PM] amoeba: That's a window color math thing
+[4:04 PM] Aremath: in a fireflea room when you activate XRAY, frozen enemies go dark outside of XRAY
+[4:04 PM] Aremath: but non-frozen enemies display normally
+
+
+[4:04 PM] amoeba: That's why I was saying you'd have to rewrite that so it could build the correct tilemap and load that instead
+
+
+[4:13 PM] Aremath: where is the tile-loading routine?
+[4:15 PM] Aremath: assuming $80
+[4:16 PM] amoeba: I think so
+[4:16 PM] amoeba: There's a few of them
+[4:16 PM] amoeba: For horizontal amd vertical movement
+[4:16 PM] amoeba: And also things like unpausing
+[4:18 PM] amoeba: And you'd have to modify the xray cleanup to reload stuff past the edges of the screen, since the game sometimes assumes tiles just off the edge are correct

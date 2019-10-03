@@ -1,0 +1,78 @@
+- Fireflea uses x-ray mode??
+	X-ray direction set to samus velocity
+	(calculate tan^-1 by using Taylor approx. or use a table like $89:AD5f)
+
+[3:44 PM] moehr: There's a check that can be disabled. Had to do it for an item I replaced x-ray. I can't remember the reason but I wanted the item to work while running
+[3:44 PM] moehr: It's in bank $92 or (93 maybe)
+
+[3:56 PM] amoeba: Xray works by taking over layer 2, putting the scanned version of layet 1 there and then using windowing and hdma to create the eye cone
+[3:57 PM] amoeba: You can't move so the code doesn't have to figure out how to update the scanned version
+[3:58 PM] amoeba: You'd need to rewrite part of the movement routines to build and transfer the tilemap for the scanned tiles
+
+[4:01 PM] Aremath: also wondering if there's a way to get the darkening effect of ex. fireflea rooms or XRAY to apply to enemy sprites
+[4:01 PM] amoeba: That's a window color math thing
+[4:04 PM] Aremath: in a fireflea room when you activate XRAY, frozen enemies go dark outside of XRAY
+[4:04 PM] Aremath: but non-frozen enemies display normally
+
+
+[4:04 PM] amoeba: That's why I was saying you'd have to rewrite that so it could build the correct tilemap and load that instead
+
+
+[4:13 PM] Aremath: where is the tile-loading routine?
+[4:15 PM] Aremath: assuming $80
+[4:16 PM] amoeba: I think so
+[4:16 PM] amoeba: There's a few of them
+[4:16 PM] amoeba: For horizontal amd vertical movement
+[4:16 PM] amoeba: And also things like unpausing
+[4:18 PM] amoeba: And you'd have to modify the xray cleanup to reload stuff past the edges of the screen, since the game sometimes assumes tiles just off the edge are correct
+
+[4:42 PM] amoeba: Xray could also just be rewritten
+[4:42 PM] Aremath: I was thinking about that
+[4:42 PM] amoeba: So it modifies layer 1
+[4:42 PM] amoeba: Ans just skip the entire rest of how it works
+[4:43 PM] amoeba: Still needs edits to the scrolling loading routines, but much simpler
+[4:44 PM] Aremath: you're talking about $80:8CD8?
+[4:44 PM] amoeba: I don't remember exactly whetr they are
+[4:44 PM] amoeba: But there's morr than one
+[4:45 PM] Aremath: yeah there's a horizontal and vertical one
+[4:45 PM] Aremath: for scrolling DMAs
+[4:45 PM] amoeba: And also for the full screen
+[4:45 PM] amoeba: There's unpausing
+[4:45 PM] amoeba: And there's loading in the room
+[4:45 PM] amoeba: And some other crap
+[4:47 PM] Aremath: How would you need to modify layer 1
+[4:47 PM] Aremath: ?
+[4:47 PM] amoeba: Well in the routines that update layer 1
+[4:47 PM] amoeba: They have to build a tilemap of 8x8 tiles to dma
+[4:48 PM] amoeba: You can modify that to check if xray is active and use the xray bts hooks to have it use alternate tiles
+[4:48 PM] amoeba: And I guess plms too
+[4:49 PM] amoeba: And what ever other stuff I'm forgetting that xray inspects
+[4:50 PM] Aremath: do you know where xray copies the layer 2 data ?
+[4:50 PM] Aremath: ( I mean where the routine is)
+[4:50 PM] amoeba: It's part of the setup
+[4:50 PM] amoeba: It's run before much else can be done
+[4:51 PM] amoeba: I'd have to search for it though
+[4:51 PM] Aremath: what if you just ran that every frame while xray is active?
+[4:52 PM] amoeba: There is a cost to copying lots of tiles
+[4:52 PM] amoeba: You can't actually sustain full screen fmv
+[4:52 PM] Aremath: ok it would be laggy
+
+[4:53 PM] Aremath: just to check: all the x-ray HDMA code is totally separate, right?
+[4:53 PM] amoeba: There are some flags for turning off the normal layer 2 scroll handling
+[4:54 PM] amoeba: The hdma code is just for making the eye cone shape out of the windowing stuff
+
+[4:55 PM] amoeba: Ahh
+[4:55 PM] amoeba: Well then I'd write a new routine
+[4:56 PM] amoeba: With the hdma windowing
+[4:56 PM] Aremath: My plan is for the player to use x-ray as a kind of flashlight to navigate through darkened rooms
+[4:56 PM] amoeba: With layer 1&2 on the same window and just black outside it
+[4:57 PM] amoeba: Yea that's a doable effect, but I'd write it over from scratch
+[4:57 PM] Aremath: okay
+[4:57 PM] amoeba: Way easier
+[4:57 PM] Aremath: revealing secrets is nice, but it's not totally necessary if it would be a pain in the ass to make it work
+[4:58 PM] amoeba: Anything touching the tile loading routines is gonna be a pain
+[4:58 PM] Aremath: exactly
+[4:58 PM] amoeba: But it'd be pretty neat to make it work
+[4:58 PM] Aremath: I know :(
+
+

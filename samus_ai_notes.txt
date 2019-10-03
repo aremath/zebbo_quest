@@ -151,3 +151,16 @@ $82:E3C0 places samus in the new room
 10:00 PM] crashed: it's all just a series of tables with pointers to code in $93.  shot, touch, inside reactions
 
 $7F:FA02-$7F:FFFF
+
+2:38 PM] P.JBoy: Might need to call that routine in $90
+[2:39 PM] Aremath: which one?
+[2:39 PM] P.JBoy: $F084
+[2:40 PM] P.JBoy: With A = 1
+
+[6:05 PM] crashed: Aremath - although then I'd have to trigger saving to SRAM on every door transition
+Shouldn't cause any lag.  You'd be transferring more data by changing tilesets during room transitions.
+[6:05 PM] crashed: and that even comes with decompression  lol
+[6:05 PM] Aremath: okay
+[6:07 PM] crashed: usually the only time you'll experience a few lag frames during room transitions is if you change songs, because it's a pretty good chunk of data, and ARAM transfers are fucking SLOW...
+
+$81:8000 saves to SRAM
